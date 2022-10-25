@@ -1,6 +1,6 @@
 {
   "name": "react-native-safevideo-player-fork",
-  "version": "0.2.40",
+  "version": "0.2.41",
   "description": "SafeVideo video player for react native apps",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -168,5 +168,8 @@
         }
       ]
     ]
+  },
+  "dependencies": {
+    "react-native-subtitles": "^5.0.5"
   }
 }

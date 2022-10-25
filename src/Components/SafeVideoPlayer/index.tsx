@@ -48,6 +48,7 @@ import {
   useStreamPosition,
 } from 'react-native-google-cast';
 import MusicControl, { Command } from 'react-native-music-control';
+import Subtitles from 'react-native-subtitles';
 
 interface ISource {
   uri: string;
@@ -55,6 +56,7 @@ interface ISource {
 }
 
 type IOption = 'quality' | 'rate' | 'subtitle';
+type IDeviceOrientation = 'portrait' | 'landscape';
 
 interface SafeVideoPlayerProps {
   title?: string;
@@ -82,6 +84,7 @@ interface SafeVideoPlayerProps {
   playInBackground?: boolean;
   defaultQuality?: number | 'auto';
   onQualityChange?: (quality: number | 'auto') => void;
+  deviceOrientation?: IDeviceOrientation;
 }
 
 const CONTROLS_DISPLAY_TIME = 4000;
@@ -114,6 +117,7 @@ const SafeVideoPlayer = ({
   defaultQuality = 'auto',
   onQualityChange,
   textTracks,
+  deviceOrientation = 'portrait',
   ...videoProps
 }: VideoProperties & SafeVideoPlayerProps) => {
   const [playing, setPlaying] = useState(playOnStart || false);
@@ -128,6 +132,7 @@ const SafeVideoPlayer = ({
   const [showingQualityOptions, setShowingQualityOptions] = useState(false);
   const [showingSubtitleOptions, setShowingSubtitleOptions] = useState(false);
   const [selectedSubtitle, setSelectedSubtitle] = useState<string>('disable');
+  const [subtitleUri, setSubtitleUri] = useState<string>('disable');
   const [qualitySources, setQualitySources] = useState<ISource[]>([]);
   const [_disableOptions] = useState(
     Array.isArray(disableOptions)
@@ -520,6 +525,9 @@ const SafeVideoPlayer = ({
 
   const selectSubtitleOption = (option: string) => () => {
     setSelectedSubtitle(option.toLowerCase());
+    setSubtitleUri(
+      textTracks?.find((item) => item.language === option)?.uri || ''
+    );
   };
 
   const subtitleLanguage = (language: string) => {
@@ -535,277 +543,311 @@ const SafeVideoPlayer = ({
     }
   };
 
+  const topPosition = () => {
+    if (fullscreen && deviceOrientation === 'landscape') {
+      return 395;
+    }
+
+    if (fullscreen && deviceOrientation === 'portrait') {
+      return 480;
+    }
+
+    if (!fullscreen && deviceOrientation === 'landscape') {
+      return 380;
+    }
+
+    if (!fullscreen && deviceOrientation === 'portrait') {
+      return 215;
+    }
+    return;
+  };
+
   return (
     <View
       style={[containerStyle, { backgroundColor }]}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <Video
-        ref={videoRef}
-        source={
-          {
-            type: 'm3u8',
-            ...source,
-            uri: _source.uri,
-          } as any
-        }
-        resizeMode="contain"
-        paused={
-          disableCast
-            ? !playing
-            : !playing ||
-              castState === CastState.CONNECTED ||
-              castState === CastState.CONNECTING
-        }
-        rate={rate}
-        onLoadStart={onLoadStart}
-        onLoad={onLoad}
-        onProgress={onVideoProgress}
-        style={styles.player}
-        ignoreSilentSwitch="ignore"
-        playInBackground={playInBackground}
-        selectedTextTrack={{ type: 'language', value: selectedSubtitle }}
-        textTracks={textTracks}
-        {...videoProps}
-      />
-      <Animated.View
-        style={[styles.controls, { opacity: fadeAnim }]}
-        pointerEvents={controlsEnabled ? 'auto' : 'none'}
-      >
-        <View style={styles.backdrop} />
-        <View style={[styles.controlsContent, controlsStyle]}>
-          <View style={styles.header}>
-            {!disableCloseButton && (
-              <TouchableOpacity onPress={onRequestClose}>
-                <Image style={styles.closeIcon} source={closeImage} />
-              </TouchableOpacity>
-            )}
-            <Text numberOfLines={1} style={styles.videoTitle}>
-              {title}
-            </Text>
-            <View style={styles.headerActions}>
-              {!disableCast && <CastButton style={styles.castButton} />}
-              {(!disableOptions || typeof _disableOptions !== 'boolean') && (
-                <TouchableOpacity onPress={showOptions}>
-                  <Image style={styles.optionsIcon} source={optionsImage} />
+      <>
+        <Subtitles
+          containerStyle={{
+            position: 'absolute',
+            alignSelf: 'center',
+            top: topPosition(),
+            zIndex: 1,
+          }}
+          currentTime={videoInfo.currentTime}
+          textStyle={styles.subtitleStyle}
+          selectedsubtitle={{ file: subtitleUri }}
+        />
+        <Video
+          ref={videoRef}
+          source={
+            {
+              type: 'm3u8',
+              ...source,
+              uri: _source.uri,
+            } as any
+          }
+          resizeMode="contain"
+          paused={
+            disableCast
+              ? !playing
+              : !playing ||
+                castState === CastState.CONNECTED ||
+                castState === CastState.CONNECTING
+          }
+          rate={rate}
+          onLoadStart={onLoadStart}
+          onLoad={onLoad}
+          onProgress={onVideoProgress}
+          style={styles.player}
+          ignoreSilentSwitch="ignore"
+          playInBackground={playInBackground}
+          textTracks={textTracks}
+          {...videoProps}
+        />
+        <Animated.View
+          style={[styles.controls, { opacity: fadeAnim }]}
+          pointerEvents={controlsEnabled ? 'auto' : 'none'}
+        >
+          <View style={styles.backdrop} />
+          <View style={[styles.controlsContent, controlsStyle]}>
+            <View style={styles.header}>
+              {!disableCloseButton && (
+                <TouchableOpacity onPress={onRequestClose}>
+                  <Image style={styles.closeIcon} source={closeImage} />
                 </TouchableOpacity>
               )}
-            </View>
-          </View>
-          <View style={styles.body}>
-            {(
-              disableCast
-                ? loading
-                : loading || castState === CastState.CONNECTING
-            ) ? (
-              <Loading />
-            ) : (
-              <View style={styles.actionControlls}>
-                <TouchableOpacity
-                  style={styles.buttonAction}
-                  onPress={() => handleForwardOrBackward('backward')}
-                >
-                  <Image style={styles.iconAction} source={backward} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.buttonAction}
-                  onPress={playing ? pause : play}
-                >
-                  <Image
-                    style={styles.iconAction}
-                    source={playing ? pauseImage : playImage}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.buttonAction}
-                  onPress={() => handleForwardOrBackward('forward')}
-                >
-                  <Image style={styles.iconAction} source={forward} />
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-          <View style={styles.footer}>
-            <ProgressBar
-              currentTime={videoInfo.currentTime}
-              duration={videoInfo.duration}
-              progressBarColor={progressBarColor}
-              onTouchStart={onProgressTouchStart}
-              onSeek={onSeek}
-            />
-            <View style={styles.footerActions}>
-              <Text style={styles.timer}>
-                {formatTime(videoInfo.currentTime)} /{' '}
-                {formatTime(videoInfo.duration)}
+              <Text numberOfLines={1} style={styles.videoTitle}>
+                {title}
               </Text>
-              <View style={styles.footerActionsContent}>
-                <Image
-                  style={styles.safevideoLogo}
-                  source={safevideoLogoImage}
-                />
-                {!disableFullscreen && (
-                  <TouchableOpacity
-                    onPress={fullscreen ? exitFullscreen : enterFullscreen}
-                  >
-                    <Image
-                      style={styles.fullscreenIcon}
-                      source={
-                        fullscreen ? exitFullscreenImage : enterFullscreenImage
-                      }
-                    />
+              <View style={styles.headerActions}>
+                {!disableCast && <CastButton style={styles.castButton} />}
+                {(!disableOptions || typeof _disableOptions !== 'boolean') && (
+                  <TouchableOpacity onPress={showOptions}>
+                    <Image style={styles.optionsIcon} source={optionsImage} />
                   </TouchableOpacity>
                 )}
               </View>
             </View>
+            <View style={styles.body}>
+              {(
+                disableCast
+                  ? loading
+                  : loading || castState === CastState.CONNECTING
+              ) ? (
+                <Loading />
+              ) : (
+                <View style={styles.actionControlls}>
+                  <TouchableOpacity
+                    style={styles.buttonAction}
+                    onPress={() => handleForwardOrBackward('backward')}
+                  >
+                    <Image style={styles.iconAction} source={backward} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.buttonAction}
+                    onPress={playing ? pause : play}
+                  >
+                    <Image
+                      style={styles.iconAction}
+                      source={playing ? pauseImage : playImage}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.buttonAction}
+                    onPress={() => handleForwardOrBackward('forward')}
+                  >
+                    <Image style={styles.iconAction} source={forward} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+            <View style={styles.footer}>
+              <ProgressBar
+                currentTime={videoInfo.currentTime}
+                duration={videoInfo.duration}
+                progressBarColor={progressBarColor}
+                onTouchStart={onProgressTouchStart}
+                onSeek={onSeek}
+              />
+              <View style={styles.footerActions}>
+                <Text style={styles.timer}>
+                  {formatTime(videoInfo.currentTime)} /{' '}
+                  {formatTime(videoInfo.duration)}
+                </Text>
+                <View style={styles.footerActionsContent}>
+                  <Image
+                    style={styles.safevideoLogo}
+                    source={safevideoLogoImage}
+                  />
+                  {!disableFullscreen && (
+                    <TouchableOpacity
+                      onPress={fullscreen ? exitFullscreen : enterFullscreen}
+                    >
+                      <Image
+                        style={styles.fullscreenIcon}
+                        source={
+                          fullscreen
+                            ? exitFullscreenImage
+                            : enterFullscreenImage
+                        }
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
-      </Animated.View>
-      {(!disableOptions || typeof _disableOptions !== 'boolean') && (
-        <>
-          <OptionsModal
-            visible={showingSettings}
-            textColor={textColor}
-            backgroundColor={backgroundColor}
-            onRequestClose={hideOptions}
-          >
-            {!_disableOptions?.subtitle &&
-              castState !== CastState.CONNECTED && (
+        </Animated.View>
+        {(!disableOptions || typeof _disableOptions !== 'boolean') && (
+          <>
+            <OptionsModal
+              visible={showingSettings}
+              textColor={textColor}
+              backgroundColor={backgroundColor}
+              onRequestClose={hideOptions}
+            >
+              {!_disableOptions?.subtitle &&
+                castState !== CastState.CONNECTED && (
+                  <OptionItem
+                    title="Legenda"
+                    iconImage={subtitleImage}
+                    color={textColor}
+                    onPress={showSubtitleOptions}
+                  />
+                )}
+              {!!menuOption &&
+                [
+                  ...(menuOption?.length ? menuOption : [menuOption]),
+                ].map((option, index) => cloneElement(option, { key: index }))}
+              {!_disableOptions?.quality &&
+                castState !== CastState.CONNECTED && (
+                  <OptionItem
+                    title="Qualidade"
+                    iconImage={qualityImage}
+                    color={textColor}
+                    onPress={showQualityOptions}
+                  />
+                )}
+              {!_disableOptions?.rate && (
                 <OptionItem
-                  title="Legenda"
-                  iconImage={subtitleImage}
+                  title="Velocidade"
+                  iconImage={videoSpeedImage}
                   color={textColor}
-                  onPress={showSubtitleOptions}
+                  onPress={showSpeedOptions}
                 />
               )}
-            {!!menuOption &&
-              [
-                ...(menuOption?.length ? menuOption : [menuOption]),
-              ].map((option, index) => cloneElement(option, { key: index }))}
+            </OptionsModal>
             {!_disableOptions?.quality && castState !== CastState.CONNECTED && (
-              <OptionItem
-                title="Qualidade"
-                iconImage={qualityImage}
-                color={textColor}
-                onPress={showQualityOptions}
-              />
+              <OptionsModal
+                visible={showingQualityOptions}
+                textColor={textColor}
+                backgroundColor={backgroundColor}
+                onRequestClose={hideQualityOptions}
+              >
+                {qualitySources.map((qualitySource, index) => (
+                  <OptionItem
+                    key={index}
+                    title={
+                      qualitySource.quality === 'auto'
+                        ? qualitySource.quality
+                        : qualitySource.quality + 'p'
+                    }
+                    onPress={setVideoQuality(qualitySource.quality)}
+                    iconImage={
+                      _source.quality === qualitySource.quality && checkImage
+                    }
+                    color={textColor}
+                  />
+                ))}
+              </OptionsModal>
             )}
             {!_disableOptions?.rate && (
-              <OptionItem
-                title="Velocidade"
-                iconImage={videoSpeedImage}
-                color={textColor}
-                onPress={showSpeedOptions}
-              />
+              <OptionsModal
+                visible={showingSpeedOptions}
+                textColor={textColor}
+                backgroundColor={backgroundColor}
+                onRequestClose={hideSpeedOptions}
+              >
+                <OptionItem
+                  title="0.25x"
+                  onPress={setVideoRate(0.25)}
+                  iconImage={rate === 0.25 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="0.5x"
+                  onPress={setVideoRate(0.5)}
+                  iconImage={rate === 0.5 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="0.75x"
+                  onPress={setVideoRate(0.75)}
+                  iconImage={rate === 0.75 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="Normal"
+                  onPress={setVideoRate(1)}
+                  iconImage={rate === 1 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="1.25x"
+                  onPress={setVideoRate(1.25)}
+                  iconImage={rate === 1.25 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="1.5x"
+                  onPress={setVideoRate(1.5)}
+                  iconImage={rate === 1.5 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="1.75x"
+                  onPress={setVideoRate(1.75)}
+                  iconImage={rate === 1.75 && checkImage}
+                  color={textColor}
+                />
+                <OptionItem
+                  title="2x"
+                  onPress={setVideoRate(2)}
+                  iconImage={rate === 2 && checkImage}
+                  color={textColor}
+                />
+              </OptionsModal>
             )}
-          </OptionsModal>
-          {!_disableOptions?.quality && castState !== CastState.CONNECTED && (
-            <OptionsModal
-              visible={showingQualityOptions}
-              textColor={textColor}
-              backgroundColor={backgroundColor}
-              onRequestClose={hideQualityOptions}
-            >
-              {qualitySources.map((qualitySource, index) => (
+            {!_disableOptions?.subtitle && (
+              <OptionsModal
+                visible={showingSubtitleOptions}
+                textColor={textColor}
+                backgroundColor={backgroundColor}
+                onRequestClose={hideSubtitleOptions}
+              >
                 <OptionItem
-                  key={index}
-                  title={
-                    qualitySource.quality === 'auto'
-                      ? qualitySource.quality
-                      : qualitySource.quality + 'p'
-                  }
-                  onPress={setVideoQuality(qualitySource.quality)}
-                  iconImage={
-                    _source.quality === qualitySource.quality && checkImage
-                  }
+                  title="Desativado"
+                  onPress={selectSubtitleOption('disable')}
+                  iconImage={selectedSubtitle === 'disable' && checkImage}
                   color={textColor}
                 />
-              ))}
-            </OptionsModal>
-          )}
-          {!_disableOptions?.rate && (
-            <OptionsModal
-              visible={showingSpeedOptions}
-              textColor={textColor}
-              backgroundColor={backgroundColor}
-              onRequestClose={hideSpeedOptions}
-            >
-              <OptionItem
-                title="0.25x"
-                onPress={setVideoRate(0.25)}
-                iconImage={rate === 0.25 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="0.5x"
-                onPress={setVideoRate(0.5)}
-                iconImage={rate === 0.5 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="0.75x"
-                onPress={setVideoRate(0.75)}
-                iconImage={rate === 0.75 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="Normal"
-                onPress={setVideoRate(1)}
-                iconImage={rate === 1 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="1.25x"
-                onPress={setVideoRate(1.25)}
-                iconImage={rate === 1.25 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="1.5x"
-                onPress={setVideoRate(1.5)}
-                iconImage={rate === 1.5 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="1.75x"
-                onPress={setVideoRate(1.75)}
-                iconImage={rate === 1.75 && checkImage}
-                color={textColor}
-              />
-              <OptionItem
-                title="2x"
-                onPress={setVideoRate(2)}
-                iconImage={rate === 2 && checkImage}
-                color={textColor}
-              />
-            </OptionsModal>
-          )}
-          {!_disableOptions?.subtitle && (
-            <OptionsModal
-              visible={showingSubtitleOptions}
-              textColor={textColor}
-              backgroundColor={backgroundColor}
-              onRequestClose={hideSubtitleOptions}
-            >
-              <OptionItem
-                title="Desativado"
-                onPress={selectSubtitleOption('disable')}
-                iconImage={selectedSubtitle === 'disable' && checkImage}
-                color={textColor}
-              />
-              {textTracks?.map((item, index) => (
-                <OptionItem
-                  key={index}
-                  title={subtitleLanguage(item.language || '')}
-                  onPress={selectSubtitleOption(item.language || '')}
-                  iconImage={selectedSubtitle === item.language && checkImage}
-                  color={textColor}
-                />
-              ))}
-            </OptionsModal>
-          )}
-        </>
-      )}
+                {textTracks?.map((item, index) => (
+                  <OptionItem
+                    key={index}
+                    title={subtitleLanguage(item.language || '')}
+                    onPress={selectSubtitleOption(item.language || '')}
+                    iconImage={selectedSubtitle === item.language && checkImage}
+                    color={textColor}
+                  />
+                ))}
+              </OptionsModal>
+            )}
+          </>
+        )}
+      </>
     </View>
   );
 };
@@ -816,6 +858,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    zIndex: 2,
   },
 
   actionControlls: {
@@ -910,6 +953,15 @@ const styles = StyleSheet.create({
   safevideoLogo: {
     width: 76,
     height: 16,
+  },
+  subtitleContainer: {
+    position: 'absolute',
+    alignSelf: 'center',
+    zIndex: 9999,
+  },
+  subtitleStyle: {
+    fontSize: 18,
+    padding: 8,
   },
 });
 

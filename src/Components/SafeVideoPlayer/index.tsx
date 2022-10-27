@@ -525,9 +525,14 @@ const SafeVideoPlayer = ({
 
   const selectSubtitleOption = (option: string) => () => {
     setSelectedSubtitle(option.toLowerCase());
-    setSubtitleUri(
-      textTracks?.find((item) => item.language === option)?.uri || ''
-    );
+
+    if (option === 'disable') {
+      setSubtitleUri('disable');
+    } else {
+      setSubtitleUri(
+        textTracks?.find((item) => item.language === option)?.uri || ''
+      );
+    }
   };
 
   const subtitleLanguage = (language: string) => {
@@ -569,17 +574,19 @@ const SafeVideoPlayer = ({
       onTouchEnd={onTouchEnd}
     >
       <>
-        <Subtitles
-          containerStyle={{
-            position: 'absolute',
-            alignSelf: 'center',
-            top: topPosition(),
-            zIndex: 1,
-          }}
-          currentTime={videoInfo.currentTime}
-          textStyle={styles.subtitleStyle}
-          selectedsubtitle={{ file: subtitleUri }}
-        />
+        {subtitleUri !== 'disable' && (
+          <Subtitles
+            containerStyle={{
+              position: 'absolute',
+              alignSelf: 'center',
+              top: topPosition(),
+              zIndex: 1,
+            }}
+            currentTime={videoInfo.currentTime}
+            textStyle={styles.subtitleStyle}
+            selectedsubtitle={{ file: subtitleUri }}
+          />
+        )}
         <Video
           ref={videoRef}
           source={

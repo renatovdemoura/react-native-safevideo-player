@@ -33,7 +33,7 @@ import videoSpeedImage from '../../Assets/video-speed.png';
 import optionsImage from '../../Assets/options.png';
 import closeImage from '../../Assets/close.png';
 import checkImage from '../../Assets/check.png';
-import subtitleImage from '../../Assets/subtitle.png';
+// import subtitleImage from '../../Assets/subtitle.png';
 import ProgressBar from './ProgressBar';
 import OptionsModal from './OptionsModal';
 import OptionItem from './OptionsModal/OptionItem';
@@ -48,7 +48,7 @@ import {
   useStreamPosition,
 } from 'react-native-google-cast';
 import MusicControl, { Command } from 'react-native-music-control';
-import Subtitles from 'react-native-subtitles';
+// import Subtitles from 'react-native-subtitles';
 
 interface ISource {
   uri: string;
@@ -117,7 +117,7 @@ const SafeVideoPlayer = ({
   defaultQuality = 'auto',
   onQualityChange,
   textTracks,
-  deviceOrientation = 'portrait',
+  // deviceOrientation = 'portrait',
   ...videoProps
 }: VideoProperties & SafeVideoPlayerProps) => {
   const [playing, setPlaying] = useState(playOnStart || false);
@@ -130,9 +130,9 @@ const SafeVideoPlayer = ({
   const [showingSettings, setShowingSettings] = useState(false);
   const [showingSpeedOptions, setShowingSpeedOptions] = useState(false);
   const [showingQualityOptions, setShowingQualityOptions] = useState(false);
-  const [showingSubtitleOptions, setShowingSubtitleOptions] = useState(false);
-  const [selectedSubtitle, setSelectedSubtitle] = useState<string>('disable');
-  const [subtitleUri, setSubtitleUri] = useState<string>('disable');
+  // const [showingSubtitleOptions, setShowingSubtitleOptions] = useState(false);
+  // const [selectedSubtitle, setSelectedSubtitle] = useState<string>('disable');
+  // const [subtitleUri, setSubtitleUri] = useState<string>('disable');
   const [qualitySources, setQualitySources] = useState<ISource[]>([]);
   const [_disableOptions] = useState(
     Array.isArray(disableOptions)
@@ -488,14 +488,14 @@ const SafeVideoPlayer = ({
     setShowingQualityOptions(false);
   };
 
-  const showSubtitleOptions = () => {
-    hideOptions();
-    setShowingSubtitleOptions(true);
-  };
+  // const showSubtitleOptions = () => {
+  //   hideOptions();
+  //   setShowingSubtitleOptions(true);
+  // };
 
-  const hideSubtitleOptions = () => {
-    setShowingSubtitleOptions(false);
-  };
+  // const hideSubtitleOptions = () => {
+  //   setShowingSubtitleOptions(false);
+  // };
 
   const formatTime = (seconds: number) => {
     const date = new Date(0);
@@ -523,49 +523,42 @@ const SafeVideoPlayer = ({
     videoRef.current.seek(currentTime);
   };
 
-  const selectSubtitleOption = (option: string) => () => {
-    setSelectedSubtitle(option.toLowerCase());
+  // const selectSubtitleOption = (option: string) => () => {
+  //   setSelectedSubtitle(option.toLowerCase());
 
-    if (option === 'disable') {
-      setSubtitleUri('disable');
-    } else {
-      setSubtitleUri(
-        textTracks?.find((item) => item.language === option)?.uri || ''
-      );
-    }
-  };
+  //   if (option === 'disable') {
+  //     setSubtitleUri('disable');
+  //   } else {
+  //     setSubtitleUri(
+  //       textTracks?.find((item) => item.language === option)?.uri || ''
+  //     );
+  //   }
+  // };
 
-  const subtitleLanguage = (language: string) => {
-    switch (language) {
-      case 'pt-br':
-        return 'Português';
-      case 'en-us':
-        return 'Inglês';
-      case 'es-es':
-        return 'Espanhol';
-      default:
-        return 'Desativado';
-    }
-  };
+  // const subtitleLanguage = (language: string) => {
+  //   switch (language) {
+  //     case 'pt-br':
+  //       return 'Português';
+  //     case 'en-us':
+  //       return 'Inglês';
+  //     case 'es-es':
+  //       return 'Espanhol';
+  //     default:
+  //       return 'Desativado';
+  //   }
+  // };
 
-  const topPosition = () => {
-    if (fullscreen && deviceOrientation === 'landscape') {
-      return 395;
-    }
+  // const height = () => {
+  //   if (fullscreen && deviceOrientation === 'portrait') {
+  //     return '67%';
+  //   }
 
-    if (fullscreen && deviceOrientation === 'portrait') {
-      return 480;
-    }
+  //   if (fullscreen && deviceOrientation === 'landscape') {
+  //     return '97%';
+  //   }
 
-    if (!fullscreen && deviceOrientation === 'landscape') {
-      return 380;
-    }
-
-    if (!fullscreen && deviceOrientation === 'portrait') {
-      return 215;
-    }
-    return;
-  };
+  //   return '100%';
+  // };
 
   return (
     <View
@@ -574,19 +567,20 @@ const SafeVideoPlayer = ({
       onTouchEnd={onTouchEnd}
     >
       <>
-        {subtitleUri !== 'disable' && (
+        {/* {subtitleUri !== 'disable' && (
           <Subtitles
             containerStyle={{
               position: 'absolute',
               alignSelf: 'center',
-              top: topPosition(),
+              justifyContent: 'flex-end',
+              height: height(),
               zIndex: 1,
             }}
             currentTime={videoInfo.currentTime}
             textStyle={styles.subtitleStyle}
             selectedsubtitle={{ file: subtitleUri }}
           />
-        )}
+        )} */}
         <Video
           ref={videoRef}
           source={
@@ -716,7 +710,7 @@ const SafeVideoPlayer = ({
               backgroundColor={backgroundColor}
               onRequestClose={hideOptions}
             >
-              {!_disableOptions?.subtitle &&
+              {/* {!_disableOptions?.subtitle &&
                 castState !== CastState.CONNECTED && (
                   <OptionItem
                     title="Legenda"
@@ -724,7 +718,7 @@ const SafeVideoPlayer = ({
                     color={textColor}
                     onPress={showSubtitleOptions}
                   />
-                )}
+                )} */}
               {!!menuOption &&
                 [
                   ...(menuOption?.length ? menuOption : [menuOption]),
@@ -828,7 +822,7 @@ const SafeVideoPlayer = ({
                 />
               </OptionsModal>
             )}
-            {!_disableOptions?.subtitle && (
+            {/* {!_disableOptions?.subtitle && (
               <OptionsModal
                 visible={showingSubtitleOptions}
                 textColor={textColor}
@@ -851,7 +845,7 @@ const SafeVideoPlayer = ({
                   />
                 ))}
               </OptionsModal>
-            )}
+            )} */}
           </>
         )}
       </>
@@ -960,11 +954,6 @@ const styles = StyleSheet.create({
   safevideoLogo: {
     width: 76,
     height: 16,
-  },
-  subtitleContainer: {
-    position: 'absolute',
-    alignSelf: 'center',
-    zIndex: 9999,
   },
   subtitleStyle: {
     fontSize: 18,

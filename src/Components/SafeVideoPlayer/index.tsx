@@ -548,16 +548,23 @@ const SafeVideoPlayer = ({
     }
   };
 
-  const height = () => {
-    if (fullscreen && deviceOrientation === 'portrait') {
-      return '67%';
-    }
-
+  const topPosition = () => {
     if (fullscreen && deviceOrientation === 'landscape') {
-      return '97%';
+      return '89%';
     }
 
-    return '100%';
+    if (fullscreen && deviceOrientation === 'portrait') {
+      return '58%';
+    }
+
+    if (!fullscreen && deviceOrientation === 'landscape') {
+      return '91%';
+    }
+
+    if (!fullscreen && deviceOrientation === 'portrait') {
+      return '82%';
+    }
+    return '82%';
   };
 
   return (
@@ -572,8 +579,7 @@ const SafeVideoPlayer = ({
             containerStyle={{
               position: 'absolute',
               alignSelf: 'center',
-              justifyContent: 'flex-end',
-              height: height(),
+              top: topPosition(),
               zIndex: 1,
             }}
             currentTime={videoInfo.currentTime}
@@ -605,7 +611,6 @@ const SafeVideoPlayer = ({
           style={styles.player}
           ignoreSilentSwitch="ignore"
           playInBackground={playInBackground}
-          textTracks={textTracks}
           {...videoProps}
         />
         <Animated.View

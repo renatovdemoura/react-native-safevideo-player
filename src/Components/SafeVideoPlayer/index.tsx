@@ -49,6 +49,7 @@ import {
 } from 'react-native-google-cast';
 import MusicControl, { Command } from 'react-native-music-control';
 import Subtitles from 'react-native-subtitles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ISource {
   uri: string;
@@ -88,6 +89,13 @@ interface SafeVideoPlayerProps {
 }
 
 const CONTROLS_DISPLAY_TIME = 4000;
+
+const getCurrentSubtitle = async () => {
+  const selectedSubtitle = await AsyncStorage.getItem(
+    '@safevideo-subtitle-selected'
+  );
+  return selectedSubtitle || 'disable';
+};
 
 const SafeVideoPlayer = ({
   title,
@@ -278,6 +286,21 @@ const SafeVideoPlayer = ({
         }
       });
   }, [defaultQuality, source.uri]);
+
+  useEffect(() => {
+    async function getSubtitleSaved() {
+      const subtitle = await getCurrentSubtitle();
+
+      if (subtitle !== 'disable') {
+        setSelectedSubtitle(subtitle);
+        setSubtitleUri(
+          textTracks?.find((item) => item.language === subtitle)?.uri || ''
+        );
+      }
+    }
+
+    getSubtitleSaved();
+  }, [textTracks]);
 
   const play = useCallback(
     (event?: GestureResponderEvent) => {
@@ -523,7 +546,9 @@ const SafeVideoPlayer = ({
     videoRef.current.seek(currentTime);
   };
 
-  const selectSubtitleOption = (option: string) => () => {
+  const selectSubtitleOption = (option: string) => async () => {
+    await AsyncStorage.setItem('@safevideo-subtitle-selected', option);
+
     setSelectedSubtitle(option.toLowerCase());
 
     if (option === 'disable') {

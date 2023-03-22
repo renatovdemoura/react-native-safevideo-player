@@ -587,7 +587,7 @@ const SafeVideoPlayer = ({
     }
 
     if (!fullscreen && deviceOrientation === 'portrait') {
-      return '82%';
+      return '77%';
     }
     return '82%';
   };

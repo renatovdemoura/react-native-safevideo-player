@@ -8196,10 +8196,10 @@ react-native-builder-bob@^0.17.1:
   optionalDependencies:
     jetifier "^1.6.6"
 
-react-native-google-cast@^4.0.2:
-  version "4.1.2"
-  resolved "https://registry.yarnpkg.com/react-native-google-cast/-/react-native-google-cast-4.1.2.tgz#8a2b83849034029665f49fb36222c2439abb6c12"
-  integrity sha512-XfrbYBjhNCOz3JOoFEiLHqKJyAAdyAA8c5Ga/U0xdG4ejcPXFgVWnErANxwyH77wxQRhkCZ+hGRO8w1PFNuVCA==
+react-native-google-cast@^4.8.0:
+  version "4.8.0"
+  resolved "https://registry.yarnpkg.com/react-native-google-cast/-/react-native-google-cast-4.8.0.tgz#7af427bc8a44d1da62e6d2238c3c74136d098297"
+  integrity sha512-1BjHueIWO5NvR9VjJLeB8SvC8cidTJaZopztI8KbBc64GIiF9jWcfoV/MGK+IRsBZ9E8mDJ2syJmS+AAqgWiEA==
 
 react-native-music-control@^1.4.0:
   version "1.4.0"

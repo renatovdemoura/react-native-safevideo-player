@@ -70,7 +70,7 @@
     "react": "16.13.1",
     "react-native": "0.63.4",
     "react-native-builder-bob": "^0.17.1",
-    "react-native-google-cast": "^4.0.2",
+    "react-native-google-cast": "^4.8.0",
     "react-native-music-control": "^1.4.0",
     "react-native-video": "^5.2.1",
     "release-it": "^14.2.2",
